@@ -1,54 +1,45 @@
-// Minimal mock auth service. Replace with real backend calls (Supabase, Firebase, etc.).
-// API:
-// - signIn({email, password}) => resolves on success, rejects with Error on failure
-// - signUp({name, email, password}) => resolves on success, rejects on failure
-// - signOut() => resolves
+import supabase from './supabase.js'
 
-const simulateNetwork = (result, ms = 700) =>
-  new Promise((res) => setTimeout(() => res(result), ms));
+export const signUp = async (email, password, username) => {
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                username,
+            },
+        },
+    });
 
-export async function signIn({ email, password }) {
-  // Basic client-side checks
-  if (!email || !password) throw new Error("Email et mot de passe requis.");
+    if (error) {
+        throw new Error(error.message);
+    }
 
-  // TODO: Replace this simulation with real authentication (e.g., Supabase auth call)
-  // Example with supabase-js: await supabase.auth.signInWithPassword({ email, password })
+    return data;
+};
+export const signIn = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+    });
 
-  // Very simple mocked logic for dev/demo: accept any password with '@' in email
-  if (!email.includes("@")) {
-    await simulateNetwork(null);
-    throw new Error("Adresse e-mail invalide.");
-  }
+    if (error) {
+        throw new Error(error.message);
+    }
 
-  // simulate wrong-password for password 'wrong'
-  if (password === "wrong") {
-    await simulateNetwork(null);
-    throw new Error("Mot de passe incorrect.");
-  }
+    return data;
+};
 
-  return simulateNetwork({ id: "user_mock_id", email });
-}
 
-export async function signUp({ name, email, password }) {
-  if (!name || !email || !password) throw new Error("Tous les champs sont requis.");
-  if (!email.includes("@")) throw new Error("Adresse e-mail invalide.");
-  if (password.length < 6) throw new Error("Le mot de passe doit contenir au moins 6 caractères.");
 
-  // TODO: Replace with real sign-up call to your backend
-  // Example with supabase-js: await supabase.auth.signUp({ email, password }, { data: { name } })
 
-  // Simulate existing user
-  if (email === "already@taken.com") {
-    await simulateNetwork(null);
-    throw new Error("Un compte existe déjà pour cette adresse e-mail.");
-  }
 
-  return simulateNetwork({ id: "new_user_mock_id", email, name });
-}
+export const SignOut = async () => {
+    const { error } = await supabase.auth.signOut();
 
-export async function signOut() {
-  // TODO: call real signOut method on backend if needed
-  return simulateNetwork(true, 300);
-}
+    if (error) {
+        throw new Error(error.message);
+    }
 
-export default { signIn, signUp, signOut };
+    return { message: "Signed out successfully" };
+};

@@ -8,6 +8,7 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -29,7 +30,7 @@ const Login = () => {
     };
 
     return (
-        <div className="flex justify-center h-[50dvh] mt-[10dvh]">
+        <div className="flex px-4 justify-center h-[50dvh] mt-[10dvh]">
             <div className="w-full max-w-md bg-[#111] border border-[#2b2b2b] rounded-lg p-8 shadow-md">
                 <h2 className="text-2xl font-black text-[hsl(0_0%_95%)] mb-2">Connexion</h2>
                 <p className="text-sm text-gray-400 mb-6">Connecte-toi pour accéder à tes ressources et au forum.</p>
@@ -73,7 +74,7 @@ const Login = () => {
                 </form>
 
                 <div className="mt-4 text-sm text-gray-400">
-                    Pas encore de compte? <Link to="/signup" className="text-white font-semibold hover:underline">S'inscrire</Link>
+                    Pas encore de compte? <Link to="/signup" className="text-white font-semibold hover:underline" onClick={() => setActiveTab('signup')}>S'inscrire</Link>
                 </div>
             </div>
         </div>

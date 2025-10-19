@@ -39,7 +39,7 @@ const Signup = () => {
     };
 
     return (
-        <div className="flex justify-center mt-[10dvh]">
+        <div className="flex px-4 justify-center mt-[10dvh]">
             <div className="w-full max-w-lg bg-[#111] border border-[#2b2b2b] rounded-lg p-8 shadow-md">
                 <h2 className="text-2xl font-black text-[hsl(0_0%_95%)] mb-2">Créer un compte</h2>
                 <p className="text-sm text-gray-400 mb-6">Rejoins AKA pour partager et accéder aux ressources académiques.</p>
@@ -109,7 +109,7 @@ const Signup = () => {
                 </form>
 
                 <div className="mt-4 text-sm text-gray-400">
-                    Déjà un compte? <Link to="/login" className="text-white font-semibold hover:underline">Se connecter</Link>
+                    Déjà un compte? <Link to="/login" className="text-white font-semibold hover:underline" onClick={() => setActiveTab('login')}>Se connecter</Link>
                 </div>
             </div>
         </div>

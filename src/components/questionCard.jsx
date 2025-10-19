@@ -19,14 +19,14 @@ const QuestionCard = ({ post }) => {
 
   return (
     <div className="border border-[#bdbdbd25] bg-[#222] p-4 rounded-md w-fit">
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <div className="text-gray-300">
           <div className="text-xs text-gray-400">{post.course}</div>
           <h3 className="text-lg font-bold text-[hsl(0_0%_95%)]">{post.title}</h3>
           <div className="text-sm text-gray-400 mt-1">{post.content}</div>
           <div className="flex items-center gap-3 mt-3 text-sm text-gray-400">
             <div className="inline-flex items-center"><FaUser className="mr-1"/> {post.author}</div>
-            <div className="inline-flex items-center"><FiMessageCircle className="mr-1"/> {post.comments} commentaires</div>
+            <div className="inline-flex items-center"><FiMessageCircle className="mr-1"/> {post.comments}</div>
           </div>
         </div>
 
