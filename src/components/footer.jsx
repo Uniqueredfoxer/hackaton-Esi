@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import Logo from './logo';
 
 
 
@@ -12,7 +13,7 @@ const Footer = () => {
                 <div className="flex flex-col gap-8 px-[20%] mb-4 md:px-4 md:flex-row lg:px-8 lg:gap-16 lg:justify-between">
 
                     <div className="flex flex-col gap-4 items-start  max-w-60">
-                        <h2 className='text-2xl font-black text-[hsl(0_0%_95%)]'>AKA</h2>
+                        <Logo/>
                         <p className='text-sm text-gray-400'>Votre plateforme ultime pour les ressources académiques et la collaboration communautaire.</p>
                     </div>
                     <div className="flex flex-1  flex-col gap-8 justify-between items-start max-w-xs">
@@ -45,7 +46,7 @@ const Footer = () => {
                 </div>
                 <div>
                     <hr className='h-0.5 bg-[#bdbdbd25] border-none' />
-                    <p className="text-center font-bold text-sm mt-4">&copy; 2025 CS Academy. Tous droits réservés.</p>
+                    <p className="text-center font-bold text-sm mt-4">&copy; 2025 AKA. Tous droits réservés.</p>
                 </div>
             </div>
         </footer>

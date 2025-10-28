@@ -33,12 +33,14 @@ const postModel = {
     id: String,
     title: String,
     description: String,
-    tags: [String],
     authorId: String,
-    postedAT: Date,
+    tags: [String],
     scores: Number,
     views: Number,
     commentsNumber: Number, 
+    isResolved: Boolean,
+    imageUrl: String,
+    postedAT: Date,
 }
 
 const commentModel = {

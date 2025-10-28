@@ -1,33 +1,60 @@
-const sample = Array.from({ length: 18 }).map((_, i) => {
-  const types = ["Cours", "TD", "Devoir", "Livre", "Vidéo"];
-  const type = types[i % types.length];
-  return {
-    id: `res_${i}`,
-    title: `${type} Exemple ${i + 1}`,
-    author: `Étudiant${i % 5}`,
-    description: `Une courte description pour ${type} Exemple ${i + 1}. Contient le sujet et l'année.`,
-    type,
-    format: "PDF",
-    level: i % 3 === 0 ? "L1" : i % 3 === 1 ? "L2" : "L3",
-    year: 2018 + (i % 6),
-    size: `${(Math.random() * 3 + 0.5).toFixed(1)} MB`,
-    downloads: Math.floor(Math.random() * 200),
-  };
-});
+import supabase from "./supabase";
 
-export async function fetchResources({ page = 1, pageSize = 6, tag = 'Tout', q = '' } = {}) {
-  
-  await new Promise((r) => setTimeout(r, 350));
+export async function fetchDocuments() {
+    const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('uploaded_at', { ascending: false })
+        .limit(10);
 
-  let list = sample.slice();
-  if (tag && tag !== 'All') list = list.filter((r) => r.type === tag);
-  if (q) {
-    const qq = q.toLowerCase();
-    list = list.filter((r) => r.title.toLowerCase().includes(qq) || r.description.toLowerCase().includes(qq));
-  }
+    if (error) {
+        console.error("Error fetching Documents:", error);
+        return [];
+    }
 
-  const start = (page - 1) * pageSize;
-  return list.slice(start, start + pageSize);
+    return data;
 }
 
-export default { fetchResources };
+export async function fetchDocumentById(id) {
+    const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error("Error fetching Document by ID:", error);
+        return null;
+    }
+
+    return data;
+}
+
+export async function deleteDocument(id) {
+    const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error deleting Document:", error);
+        return false;
+    }
+
+    return true;
+}
+
+export async function updateDocument(id, updates) {
+    const { data, error } = await supabase
+        .from('documents')
+        .update(updates)
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error("Error updating Document:", error);
+        return null;
+    }
+
+    return data;
+}

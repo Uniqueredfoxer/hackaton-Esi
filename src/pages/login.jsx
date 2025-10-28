@@ -19,7 +19,7 @@ const Login = () => {
         }
         setLoading(true);
         try {
-            await signIn({ email, password });
+            await signIn(email, password);
             // on success, redirect to home or profile
             navigate("/");
         } catch (err) {
@@ -73,9 +73,12 @@ const Login = () => {
                     </button>
                 </form>
 
-                <div className="mt-4 text-sm text-gray-400">
+                <div className="mt-4 text-sm text-gray-400 w-full">
+                
                     Pas encore de compte? <Link to="/signup" className="text-white font-semibold hover:underline" onClick={() => setActiveTab('signup')}>S'inscrire</Link>
                 </div>
+                <Link to="/forgot-password" className="cursor-pointer mt-5 text-white text-sm font-semibold hover:underline" onClick={() => setActiveTab('signup')}>j'ai oublié mon mot de passe</Link>
+
             </div>
         </div>
     );
