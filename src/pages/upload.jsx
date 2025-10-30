@@ -32,7 +32,9 @@ const Upload = () => {
     let isSubscribed = true;
 
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (isSubscribed) {
         setUser(session?.user || null);
         setLoading(false);
@@ -43,13 +45,13 @@ const Upload = () => {
 
     // Listen for auth changes — but DON'T auto-redirect
     // Instead, just update `user` so UI reacts
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (isSubscribed) {
-          setUser(session?.user || null);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (isSubscribed) {
+        setUser(session?.user || null);
       }
-    );
+    });
 
     return () => {
       isSubscribed = false;
@@ -79,7 +81,8 @@ const Upload = () => {
             Connexion requise
           </h2>
           <p className="text-gray-300 mb-6 leading-relaxed">
-            Vous devez être connecté pour téléverser des documents, accéder à votre profil ou consulter les publications.
+            Vous devez être connecté pour téléverser des documents, accéder à
+            votre profil ou consulter les publications.
           </p>
           <Link
             to="/login"
@@ -95,99 +98,108 @@ const Upload = () => {
   }
 
   // ✅ User is logged in → show upload form
-  
+
   // Options (moved inside component for clarity)
   const categoryOptions = ["Cours", "TD", "Devoir", "Livre"];
-  const levelOptions = ["Licence", "L1", "L2", "L3", "Master", "M1", "M2", "Doctorat"];
-const tagOptions = [
-  "Accounting",
-  "ADS",
-  "AI",
-  "Analog Electronics",
-  "bash",
-  "C",
-  "C++",
-  "cybersecurity",
-  "DB",
-  "Digital Electronics",
-  "Economics",
-  "Electricity",
-  "Electrokinetics",
-  "Electromagnetism",
-  "English",
-  "French",
-  "General Algebra",
-  "Go",
-  "Java",
-  "JavaScript",
-  "Linear Algebra",
-  "linux",
-  "Mathmatical Analisys",
-  "Mathematics",
-  "ML",
-  "Mobile",
-  "Networks",
-  "OS",
-  "Pointer",
-  "probability",
-  "Programming",
-  "Python",
-  "Rust",
-  "scripting",
-  "TP",
-  "Web"
-];  
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  // ✅ Better validation
-  if (
-    !file || 
-    !title.trim() || 
-    !description.trim() || 
-    !category || 
-    !year || 
-    tags.length === 0 || 
-    !level
-  ) {
-    alert("Veuillez remplir tous les champs.");
-    return;
-  }
+  const levelOptions = [
+    "Licence",
+    "L1",
+    "L2",
+    "L3",
+    "Master",
+    "M1",
+    "M2",
+    "Doctorat",
+  ];
+  const tagOptions = [
+    "Accounting",
+    "ADS",
+    "AI",
+    "Analog Electronics",
+    "bash",
+    "C",
+    "C++",
+    "cybersecurity",
+    "DB",
+    "Digital Electronics",
+    "Economics",
+    "Electricity",
+    "Electrokinetics",
+    "Electromagnetism",
+    "English",
+    "French",
+    "General Algebra",
+    "Go",
+    "Java",
+    "JavaScript",
+    "Linear Algebra",
+    "linux",
+    "Mathmatical Analisys",
+    "Mathematics",
+    "ML",
+    "Mobile",
+    "Networks",
+    "OS",
+    "Pointer",
+    "probability",
+    "Programming",
+    "Python",
+    "Rust",
+    "scripting",
+    "TP",
+    "Web",
+  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  setIsSubmitting(true);
-  
-  try {
-    const metadata = { 
-      title: title.trim(), 
-      description: description.trim(), 
-      category, 
-      year, 
-      tags, 
-      level 
-    };
-
-    // ✅ Safe call with error handling
-    const result = await uploadFile(file, metadata);
-
-    if (result.error) {
-      // Handle service-level error
-      alert("Erreur : " + result.error);
-    } else if (result.success) {
-      // Handle success
-      alert("Fichier téléversé avec succès !");
-      navigate("/documents");
-    } else {
-      // Fallback for unexpected response
-      alert("Réponse inattendue du serveur");
+    // ✅ Better validation
+    if (
+      !file ||
+      !title.trim() ||
+      !description.trim() ||
+      !category ||
+      !year ||
+      tags.length === 0 ||
+      !level
+    ) {
+      alert("Veuillez remplir tous les champs.");
+      return;
     }
-  } catch (err) {
-    // Handle network/exception errors
-    console.error("Submit error:", err);
-    alert("Erreur technique : " + (err.message || "Veuillez réessayer"));
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    setIsSubmitting(true);
+
+    try {
+      const metadata = {
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        year,
+        tags,
+        level,
+      };
+
+      // ✅ Safe call with error handling
+      const result = await uploadFile(file, metadata);
+
+      if (result.error) {
+        // Handle service-level error
+        alert("Erreur : " + result.error);
+      } else if (result.success) {
+        // Handle success
+        alert("Fichier téléversé avec succès !");
+        navigate("/resources");
+      } else {
+        // Fallback for unexpected response
+        alert("Réponse inattendue du serveur");
+      }
+    } catch (err) {
+      // Handle network/exception errors
+      console.error("Submit error:", err);
+      alert("Erreur technique : " + (err.message || "Veuillez réessayer"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleFileChange = (selectedFile) => {
     const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -220,10 +232,8 @@ const handleSubmit = async (e) => {
   };
 
   const toggleTag = (tag) => {
-    setTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag) 
-        : [...prev, tag]
+    setTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
@@ -270,9 +280,7 @@ const handleSubmit = async (e) => {
               <div className="text-center text-gray-400">
                 <UploadCloud className="w-10 h-10 mx-auto mb-3" />
                 <p className="font-semibold">Déposez votre fichier ici</p>
-                <p className="text-sm mt-1">
-                  ou cliquez pour parcourir
-                </p>
+                <p className="text-sm mt-1">ou cliquez pour parcourir</p>
                 <p className="text-xs mt-2 text-gray-500">
                   PDF, DOCX, JPG, PNG • Max 10 Mo
                 </p>
@@ -307,28 +315,30 @@ const handleSubmit = async (e) => {
             className="w-full px-4 py-3 rounded-lg bg-[#151515] border border-[#2b2b2b] text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#c0c0c095]"
           />
           <div>
-              <label className="block text-gray-400 text-sm mb-2">
-                Tags (sélectionnez-en au moins un) *
-              </label>
-              <div className="flex flex-wrap gap-2 p-3 bg-[#151515] border border-[#2b2b2b] rounded-lg min-h-[48px]">
-                {tagOptions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
-                      tags.includes(tag)
-                        ? 'bg-[#6953FF] text-white'
-                        : 'bg-[#2b2b2b] text-gray-300 hover:bg-[#3a3a3a]'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-              {tags.length === 0 && (
-                <p className="text-red-400 text-sm mt-1">Veuillez sélectionner au moins un tag.</p>
-              )}
+            <label className="block text-gray-400 text-sm mb-2">
+              Tags (sélectionnez-en au moins un) *
+            </label>
+            <div className="flex flex-wrap gap-2 p-3 bg-[#151515] border border-[#2b2b2b] rounded-lg min-h-[48px]">
+              {tagOptions.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
+                    tags.includes(tag)
+                      ? "bg-[#6953FF] text-white"
+                      : "bg-[#2b2b2b] text-gray-300 hover:bg-[#3a3a3a]"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {tags.length === 0 && (
+              <p className="text-red-400 text-sm mt-1">
+                Veuillez sélectionner au moins un tag.
+              </p>
+            )}
           </div>
           {/* Level */}
           <select

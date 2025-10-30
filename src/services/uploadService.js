@@ -28,7 +28,10 @@ const THUMBNAIL_FALLBACKS = {
 export async function uploadFile(file, metadata) {
   try {
     // ✅ 1. Get current user (modern Supabase v2+ way)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     if (sessionError || !session?.user) {
       return { error: "Vous devez être connecté pour téléverser un fichier." };
     }
@@ -50,7 +53,6 @@ export async function uploadFile(file, metadata) {
     const uniqueId = uuidv4();
     const filePath = `${user.id}/${uniqueId}.${fileExtension}`;
 
- 
     const BUCKET_NAME = "file bucket for digital Library"; // ← must match your actual bucket name
 
     const { error: uploadError } = await supabase.storage
@@ -66,9 +68,10 @@ export async function uploadFile(file, metadata) {
     }
 
     // ✅ 4. Get public URL
-    const { data: { publicUrl }, error: urlError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+      error: urlError,
+    } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
     if (urlError || !publicUrl) {
       // Clean up orphaned file
@@ -98,13 +101,13 @@ export async function uploadFile(file, metadata) {
 
     if (dbError) {
       console.error("DB insert failed:", dbError);
-      
+
       // Attempt cleanup
       try {
         const { error: deleteError } = await supabase.storage
           .from(BUCKET_NAME)
           .remove([filePath]);
-          
+
         if (deleteError) {
           console.error("Orphaned file cleanup failed:", deleteError);
           // Consider alerting admins or logging to monitoring
@@ -114,7 +117,7 @@ export async function uploadFile(file, metadata) {
       } catch (cleanupErr) {
         console.error("Unexpected cleanup error:", cleanupErr);
       }
-      
+
       return { error: "Échec de l'enregistrement des métadonnées." };
     }
     return { success: true };
@@ -122,110 +125,4 @@ export async function uploadFile(file, metadata) {
     console.error("Unexpected error in uploadFile:", err);
     return { error: "Erreur inattendue lors du téléversement." };
   }
-}
-
-
-
-
-// Update document metadata (title, description, etc.)
-export async function updateDocument(documentId, updates) {
-  const {  user: { session }, error: authError } = await supabase.auth.getSession();
-  if (authError || !session?.user) {
-    throw new Error("Authentification requise");
-  }
-
-  // Verify ownership
-  const {  doc } = await supabase
-    .from("documents")
-    .select("author_id")
-    .eq("id", documentId)
-    .single();
-
-  if (!doc || doc.author_id !== session.user.id) {
-    throw new Error("Non autorisé");
-  }
-
-  const cleanUpdates = {};
-  if (updates.title !== undefined) cleanUpdates.title = updates.title.trim();
-  if (updates.description !== undefined) cleanUpdates.description = updates.description.trim();
-  if (updates.category !== undefined) cleanUpdates.category = updates.category;
-  if (updates.year !== undefined) cleanUpdates.year = parseInt(updates.year, 10);
-  if (updates.tags !== undefined) cleanUpdates.tags = updates.tags;
-  if (updates.level !== undefined) cleanUpdates.level = updates.level;
-
-  const { error } = await supabase
-    .from("documents")
-    .update(cleanUpdates)
-    .eq("id", documentId);
-
-  if (error) throw new Error("Échec de la mise à jour");
-}
-
-// Delete document (file + metadata)
-export async function deleteDocument(documentId) {
-  const {  user: { session }, error: authError } = await supabase.auth.getSession();
-  if (authError || !session?.user) {
-    throw new Error("Authentification requise");
-  }
-
-  // Get document to verify ownership + get file path
-  const {  doc } = await supabase
-    .from("documents")
-    .select("author_id, file_url")
-    .eq("id", documentId)
-    .single();
-
-  if (!doc || doc.author_id !== session.user.id) {
-    throw new Error("Non autorisé");
-  }
-
-  // Extract file path from URL (e.g., "https://.../user-id/uuid.pdf" → "user-id/uuid.pdf")
-  const filePath = doc.file_url.split('/').slice(-2).join('/');
-
-  // Delete from storage
-  const { error: storageError } = await supabase.storage
-    .from("file bucket for digital Library")
-    .remove([filePath]);
-
-  if (storageError) {
-    console.error("Storage delete failed:", storageError);
-    // Don't throw — delete DB record anyway to avoid orphaned metadata
-  }
-
-  // Delete from DB
-  const { error: dbError } = await supabase
-    .from("documents")
-    .delete()
-    .eq("id", documentId);
-
-  if (dbError) throw new Error("Échec de la suppression");
-}
-
-// Fetch user's documents
-export async function fetchUserDocuments() {
-  const {  user: { session }, error: authError } = await supabase.auth.getSession();
-  if (authError || !session?.user) {
-    throw new Error("Authentification requise");
-  }
-
-  const { data, error } = await supabase
-    .from("documents")
-    .select(`
-      id,
-      title,
-      description,
-      category,
-      year,
-      tags,
-      level,
-      file_url,
-      file_type,
-      file_size_bytes,
-      created_at
-    `)
-    .eq("author_id", session.user.id)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new Error("Échec du chargement des documents");
-  return data;
 }

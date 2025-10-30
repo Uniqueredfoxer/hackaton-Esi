@@ -30,44 +30,47 @@ const Ask = () => {
 
   // 🔐 Auth check
   useEffect(() => {
-  let isSubscribed = true;
-  
-  const checkUser = async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error);
-        return;
+    let isSubscribed = true;
+
+    const checkUser = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Error getting session:", error);
+          return;
+        }
+
+        if (isSubscribed) {
+          setUser(session?.user || null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Error in checkUser:", err);
+        if (isSubscribed) {
+          setLoading(false);
+        }
       }
-      
+    };
+
+    checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (isSubscribed) {
         setUser(session?.user || null);
-        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error in checkUser:', err);
-      if (isSubscribed) {
-        setLoading(false);
-      }
-    }
-  };
-  
-  checkUser();
+    });
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (event, session) => {
-      if (isSubscribed) {
-        setUser(session?.user || null);
-      }
-    }
-  );
-
-  return () => {
-    isSubscribed = false;
-    subscription?.unsubscribe();
-  };
-}, [navigate]);
+    return () => {
+      isSubscribed = false;
+      subscription?.unsubscribe();
+    };
+  }, [navigate]);
   // 🌀 Loading
   if (loading) {
     return (
@@ -86,9 +89,12 @@ const Ask = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#2d3748] text-[#6953FF] mb-6">
             <Lock className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-3">Connexion requise</h2>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Connexion requise
+          </h2>
           <p className="text-gray-300 mb-6 leading-relaxed">
-            Connectez-vous pour poser des questions, partager des ressources et participer à la communauté.
+            Connectez-vous pour poser des questions, partager des ressources et
+            participer à la communauté.
           </p>
           <Link
             to="/login"
@@ -131,8 +137,8 @@ const Ask = () => {
     // Parse tags: split, clean, filter empty
     const tags = tagsInput
       .split(",")
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
 
     setIsSubmitting(true);
     let imageUrl = null;
@@ -150,7 +156,7 @@ const Ask = () => {
         return;
       }
 
-      const {  publicUrlData } = supabase.storage
+      const { publicUrlData } = supabase.storage
         .from("post-images")
         .getPublicUrl(fileName);
       imageUrl = publicUrlData.publicUrl;
@@ -190,7 +196,7 @@ const Ask = () => {
             <MessageCircle className="w-6 h-6 text-[#6953FF]" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[hsl(0_0%_95%)]">
-            Poser une question
+            Faire un post
           </h1>
         </div>
 
@@ -264,7 +270,9 @@ const Ask = () => {
                     alt="Aperçu"
                     className="max-h-32 rounded-md object-contain mb-2"
                   />
-                  <p className="text-sm text-green-400 font-medium">Image ajoutée</p>
+                  <p className="text-sm text-green-400 font-medium">
+                    Image ajoutée
+                  </p>
                 </div>
               ) : (
                 <div className="text-center text-gray-400">
@@ -287,7 +295,7 @@ const Ask = () => {
                 Publication...
               </>
             ) : (
-              "Publier ma question"
+              "Poster"
             )}
           </button>
         </form>

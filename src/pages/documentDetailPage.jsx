@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Download, FileText, Eye, Tag, Calendar, User } from "lucide-react";
 import supabase from "../services/supabase";
-import { mockDocuments } from "../services/mockData";
 
 const DocumentDetail = () => {
   const { id } = useParams();
@@ -18,7 +17,8 @@ const DocumentDetail = () => {
       try {
         const { data, error } = await supabase
           .from("documents")
-          .select(`
+          .select(
+            `
             id,
             title,
             description,
@@ -32,20 +32,22 @@ const DocumentDetail = () => {
             created_at,
             user_id,
             author:users!inner (email, user_metadata)
-          `)
+          `,
+          )
           .eq("id", id)
           .single();
 
         if (error) throw error;
 
         // Format author name
-        const authorName = data.author?.user_metadata?.username || 
-                          data.author?.email?.split('@')[0] || 
-                          "Anonyme";
+        const authorName =
+          data.author?.user_metadata?.username ||
+          data.author?.email?.split("@")[0] ||
+          "Anonyme";
 
         const doc = {
           ...data,
-          author: { name: authorName }
+          author: { name: authorName },
         };
 
         setDocument(doc);
@@ -61,17 +63,33 @@ const DocumentDetail = () => {
     if (id) fetchDocument();
   }, [id]);
 
-  const handleDownload = () => {
-    if (document?.file_url) {
-      window.open(document.file_url, '_blank');
-    }
+  /// ✅ VIEW: Open in browser (preview)
+  const handleView = (e) => {
+    e.preventDefault();
+    if (!document.file_url) return;
+
+    // Remove any existing ?download= parameter for clean preview
+    window.open(previewUrl, "_blank");
+  };
+
+  // ✅ DOWNLOAD: Force download
+  const handleDownload = (e) => {
+    e.preventDefault();
+    if (!document.file_url) return;
+
+    // Add ?download= to force download
+    const downloadUrl = document.file_url.includes("?")
+      ? `${document.file_url}&download=`
+      : `${document.file_url}?download=`;
+
+    window.open(downloadUrl, "_blank");
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -98,7 +116,9 @@ const DocumentDetail = () => {
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <div className="bg-[#1a1a1a] border border-[#2b2b2b] rounded-xl p-8">
           <FileText className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Document non trouvé</h2>
+          <h2 className="text-xl font-bold text-white mb-2">
+            Document non trouvé
+          </h2>
           <p className="text-gray-400 mb-6">{error}</p>
           <button
             onClick={() => navigate(-1)}
@@ -112,8 +132,9 @@ const DocumentDetail = () => {
   }
 
   // Determine if file is previewable
-  const isPreviewable = document?.file_type?.toLowerCase() === 'pdf' || 
-                       document?.file_url?.match(/\.(jpeg|jpg|png)$/i);
+  const isPreviewable =
+    document?.file_type?.toLowerCase() === "pdf" ||
+    document?.file_url?.match(/\.(jpeg|jpg|png)$/i);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -125,13 +146,17 @@ const DocumentDetail = () => {
         >
           ← Retour
         </button>
-        <h1 className="text-2xl md:text-3xl font-bold text-white">{document.title}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white">
+          {document.title}
+        </h1>
       </div>
 
       {/* Preview or Thumbnail */}
       <div className="bg-[#111] border border-[#2b2b2b] rounded-xl overflow-hidden mb-6">
         {isPreviewable ? (
-          <div className="relative pt-[56.25%]"> {/* 16:9 aspect ratio */}
+          <div className="relative pt-[56.25%]">
+            {" "}
+            {/* 16:9 aspect ratio */}
             <iframe
               src={document.file_url}
               className="absolute top-0 left-0 w-full h-full"
@@ -142,7 +167,9 @@ const DocumentDetail = () => {
         ) : (
           <div className="p-8 text-center">
             <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400">Aperçu non disponible pour ce type de fichier</p>
+            <p className="text-gray-400">
+              Aperçu non disponible pour ce type de fichier
+            </p>
           </div>
         )}
       </div>
@@ -158,7 +185,7 @@ const DocumentDetail = () => {
         </button>
         {isPreviewable && (
           <button
-            onClick={() => window.open(document.file_url, '_blank')}
+            onClick={() => window.open(document.file_url, "_blank")}
             className="flex items-center justify-center gap-2 bg-[#2b2b2b] hover:bg-[#3a3a3a] text-gray-200 font-medium py-3 px-6 rounded-lg transition-colors"
           >
             <Eye className="w-5 h-5" />
@@ -172,7 +199,9 @@ const DocumentDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-300 mb-3">Détails</h2>
+            <h2 className="text-lg font-semibold text-gray-300 mb-3">
+              Détails
+            </h2>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -185,7 +214,9 @@ const DocumentDetail = () => {
                 <Calendar className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Publié le</p>
-                  <p className="text-white">{formatDate(document.created_at)}</p>
+                  <p className="text-white">
+                    {formatDate(document.created_at)}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -200,7 +231,9 @@ const DocumentDetail = () => {
 
           {/* Right Column */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-300 mb-3">Catégorisation</h2>
+            <h2 className="text-lg font-semibold text-gray-300 mb-3">
+              Catégorisation
+            </h2>
             <div className="space-y-3">
               <div>
                 <p className="text-xs text-gray-500">Catégorie</p>
@@ -229,8 +262,12 @@ const DocumentDetail = () => {
 
         {/* Description */}
         <div className="mt-6 pt-6 border-t border-[#2b2b2b]">
-          <h2 className="text-lg font-semibold text-gray-300 mb-3">Description</h2>
-          <p className="text-gray-200 whitespace-pre-line">{document.description}</p>
+          <h2 className="text-lg font-semibold text-gray-300 mb-3">
+            Description
+          </h2>
+          <p className="text-gray-200 whitespace-pre-line">
+            {document.description}
+          </p>
         </div>
       </div>
     </div>
