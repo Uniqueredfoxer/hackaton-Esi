@@ -1,80 +1,125 @@
 // src/pages/Community.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import QuestionCard from "../components/questionCard";
 import { fetchPosts } from "../services/postServices";
-import { mockPosts } from "../services/mockPost";
-import { Plus, Filter, X, Search } from "lucide-react";
+import { Plus, Filter, Search } from "lucide-react";
 
 const Community = () => {
   // State
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("Tout");
   const [resolvedFilter, setResolvedFilter] = useState("Tout");
-  const [showFilters, setShowFilters] = useState(false); // Mobile only
+  const [showFilters, setShowFilters] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Options
   const tagOptions = [
-    "Tout", "ADS", "Maths", "Linear Algebra", "General Algebra", "Mathematical Analysis",
-    "Electricity", "Electromagnetism", "Analog Electronics", "Digital Electronics",
-    "Electrokinetics", "French", "English", "Economics", "Accounting", "OS",
-    "Networks", "DB", "Programmation", "Web", "Mobile", "AI", "ML", "Python",
-    "Java", "C++", "JavaScript", "Go", "Rust"
+    "Tout",
+    "ADS",
+    "Maths",
+    "Linear Algebra",
+    "General Algebra",
+    "Mathematical Analysis",
+    "Electricity",
+    "Electromagnetism",
+    "Analog Electronics",
+    "Digital Electronics",
+    "Electrokinetics",
+    "French",
+    "English",
+    "Economics",
+    "Accounting",
+    "OS",
+    "Networks",
+    "DB",
+    "Programmation",
+    "Web",
+    "Mobile",
+    "AI",
+    "ML",
+    "Python",
+    "Java",
+    "C++",
+    "JavaScript",
+    "Go",
+    "Rust",
   ];
 
   const resolvedOptions = ["Tout", "Résolues", "Non résolues"];
 
-  // Fetch posts
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
+  // Convert resolved filter to boolean for API
+  const getResolvedFilter = () => {
+    if (resolvedFilter === "Résolues") return true;
+    if (resolvedFilter === "Non résolues") return false;
+    return undefined; // "Tout" - no filter
+  };
 
-    fetchPosts({ q: query, tag: tag === "Tout", resolved: resolvedFilter })
-      .then((res) => {
-        if (mounted) {
-          setPosts(res || mockPosts);
-          setLoading(false);
+  // Load posts with current filters
+  const loadPosts = useCallback(
+    async (reset = false) => {
+      setLoading(true);
+
+      const offset = reset ? 0 : posts.length;
+
+      try {
+        const result = await fetchPosts({
+          search: query,
+          tags: tag === "Tout" ? [] : [tag],
+          isResolved: getResolvedFilter(),
+          limit: 10,
+          offset: offset,
+          sortBy: "posted_at",
+          sortOrder: "desc",
+        });
+
+        if (reset) {
+          setPosts(result.posts);
+        } else {
+          setPosts((prev) => [...prev, ...result.posts]);
         }
-      })
-      .catch((err) => {
-        console.error("Fetch error:", err);
-        if (mounted) setLoading(false);
-      });
 
-    return () => (mounted = false);
-  }, [query, tag, resolvedFilter]);
+        setTotalCount(result.totalCount);
+        setHasMore(result.hasMore);
+      } catch (error) {
+        console.error("Failed to load posts:", error);
+        if (reset) {
+          setPosts([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [query, tag, resolvedFilter, posts.length],
+  );
 
+  // Load initial posts
+  useEffect(() => {
+    loadPosts(true);
+  }, [loadPosts]);
 
-
-  // Apply filter and reset scroll
+  // Handle filter changes
   const handleFilterChange = (type, value) => {
     if (type === "tag") setTag(value);
     if (type === "resolved") setResolvedFilter(value);
     if (window.innerWidth < 768) setShowFilters(false);
   };
-  // Filter posts client-side if needed (optional)
-  const filteredPosts = posts.filter(post => {
-    const matchesQuery = !query || 
-      post.title.toLowerCase().includes(query.toLowerCase()) ||
-      post.description.toLowerCase().includes(query.toLowerCase()) ||
-      post.tags?.some(t => t.toLowerCase().includes(query.toLowerCase()));
-    
-    const matchesTag = tag === "Tout" || post.tags?.includes(tag);
-    
-    const matchesResolved = resolvedFilter === "Tout" || 
-      (resolvedFilter === "Résolues" && post.isResolved) ||
-      (resolvedFilter === "Non résolues" && !post.isResolved);
 
-    return matchesQuery && matchesTag && matchesResolved;
-  });
+  // Reset and load when filters change
+  useEffect(() => {
+    loadPosts(true);
+  }, [query, tag, resolvedFilter, loadPosts]);
 
   return (
-    <div className="pb-24"> {/* Space for floating button */}
+    <div className="pb-24">
       {/* Sticky Header */}
       <div className="px-4 pt-4 pb-3 bg-[#111] sticky top-0 z-30 border-b border-[#2b2b2b]">
-        <h1 className="text-2xl font-bold text-[hsl(0_0%_95%)] text-center">Communauté</h1>
+        <h1 className="text-2xl font-bold text-[hsl(0_0%_95%)] text-center">
+          Communauté
+        </h1>
       </div>
 
       {/* Search */}
@@ -103,7 +148,9 @@ const Community = () => {
       </div>
 
       {/* Filters */}
-      <div className={`px-4 pb-4 transition-all duration-200 ${showFilters ? 'block' : 'hidden md:block'}`}>
+      <div
+        className={`px-4 pb-4 transition-all duration-200 ${showFilters ? "block" : "hidden md:block"}`}
+      >
         {/* Tags */}
         <div className="mb-3">
           <p className="text-sm text-gray-400 mb-2">Par tag</p>
@@ -114,8 +161,8 @@ const Community = () => {
                 onClick={() => handleFilterChange("tag", t)}
                 className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors whitespace-nowrap ${
                   tag === t
-                    ? 'bg-[#6953FF] text-white'
-                    : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                    ? "bg-[#6953FF] text-white"
+                    : "bg-[#1a1a1a] text-gray-300 hover:bg-[#222]"
                 }`}
               >
                 {t}
@@ -134,8 +181,8 @@ const Community = () => {
                 onClick={() => handleFilterChange("resolved", opt)}
                 className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                   resolvedFilter === opt
-                    ? 'bg-[#6953FF] text-white'
-                    : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                    ? "bg-[#6953FF] text-white"
+                    : "bg-[#1a1a1a] text-gray-300 hover:bg-[#222]"
                 }`}
               >
                 {opt}
@@ -147,27 +194,53 @@ const Community = () => {
 
       {/* Posts */}
       <div className="px-4">
-        {loading ? (
+        {loading && posts.length === 0 ? (
           <div className="py-12 text-center text-gray-400">
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#6953FF] mb-2"></div>
             Chargement des questions...
           </div>
-        ) : filteredPosts.length === 0 ? (
+        ) : posts.length === 0 ? (
           <div className="py-12 text-center text-gray-400">
             Aucune question ne correspond à votre recherche.
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredPosts.map((post) => (
+            {posts.map((post) => (
               <QuestionCard key={post.id} post={post} />
             ))}
           </div>
+        )}
+
+        {/* Load More Button */}
+        {posts.length > 0 && hasMore && (
+          <div className="flex justify-center py-6">
+            <button
+              onClick={() => loadPosts()}
+              disabled={loading}
+              className="px-6 py-3 bg-[#1a1a1a] hover:bg-[#222] text-gray-300 rounded-lg border border-[#2b2b2b] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Chargement...
+                </>
+              ) : (
+                "Charger plus de questions"
+              )}
+            </button>
+          </div>
+        )}
+
+        {posts.length > 0 && !hasMore && (
+          <p className="text-center text-gray-500 py-4 text-sm">
+            Fin des questions ({totalCount} au total)
+          </p>
         )}
       </div>
 
       {/* Floating Ask Button */}
       <Link
-        to="/ask"
+        to="/post"
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#6953FF] hover:bg-[#5a47e0] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 z-40"
         aria-label="Poser une question"
       >

@@ -17,13 +17,14 @@ const DocumentCard = ({ document }) => {
     id,
     title,
     description,
-    author_id: author,
+    author,
     year,
     category,
     level,
     tags,
-    fileType,
-    file_size_bytes: fileSize,
+    file_type,
+    file_size,
+    file_url,
     downloads,
   } = document;
 
@@ -54,10 +55,10 @@ const DocumentCard = ({ document }) => {
   return (
     <div className="flex border h-auto w-full border-[#bdbdbd25] bg-[#1a1a1a] p-4 rounded-lg transition duration-300">
       {/* 1. File Type Indicator (PDF/DOCX/etc.) */}
-      <div className="hidden flex-shrink-0 w-16 h-full md:w-[120px] rounded-md md:flex items-center justify-center bg-gray-800 text-white font-bold text-sm shadow-inner mr-4">
+      <div className="hidden flex-shrink-0 w-16 md:w-[120px] rounded-md md:flex flex-col items-center justify-center bg-gray-800 text-white font-bold text-sm shadow-inner mr-4">
         {/* Icône basée sur le type de fichier (vous pouvez ajouter plus de logique ici) */}
         <FileText className="w-6 h-6 text-gray-400 mb-1" />
-        {fileType}
+        {file_type}
       </div>
 
       {/* 2. Content Section */}
@@ -107,7 +108,7 @@ const DocumentCard = ({ document }) => {
             <span className="text-gray-700">|</span>
             <span className="text-gray-500">{year}</span>
             <span className="text-gray-700">|</span>
-            <span className="text-gray-500 text-nowrap">{fileSize}</span>
+            <span className="text-gray-500 text-nowrap">{file_size}</span>
 
             {/* Downloads: Visible sur Desktop, caché sur Mobile */}
             <div className="hidden md:flex items-center text-gray-400">

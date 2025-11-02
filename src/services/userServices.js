@@ -1,31 +1,13 @@
 import supabase from "./supabase";
 
-export async function fetchUserProfile() {
-  const {
-    user: { session },
-    error: authError,
-  } = await supabase.auth.getSession();
-  if (authError || !session?.user) {
-    throw new Error("Vous devez être connecté pour accéder à votre profil.");
-  }
-
-  const userId = session.user.id;
-
+export async function fetchUserProfile(userId) {
   const { data, error } = await supabase
     .from("profiles")
-    .select(
-      `
-      id,
-      username,
-      role,
-      scores,
-      profile_picture,
-      bio,
-      created_at
-    `,
-    )
+    .select("*")
     .eq("id", userId)
     .single();
+
+  console.log(data);
 
   if (error) throw error;
 
@@ -33,15 +15,7 @@ export async function fetchUserProfile() {
 }
 
 //fetch user documents
-export async function fetchUserDocuments() {
-  const {
-    user: { session },
-    error: authError,
-  } = await supabase.auth.getSession();
-  if (authError || !session?.user) {
-    throw new Error("Authentification requise");
-  }
-
+export async function fetchUserDocuments(userId) {
   const { data, error } = await supabase
     .from("documents")
     .select(
@@ -56,11 +30,13 @@ export async function fetchUserDocuments() {
       file_url,
       file_type,
       file_size_bytes,
-      created_at
+      uploaded_at
     `,
     )
-    .eq("author_id", session.user.id)
-    .order("created_at", { ascending: false });
+    .eq("author_id", userId)
+    .order("uploaded_at", { ascending: false });
+
+  console.log(data);
 
   if (error) throw new Error("Échec du chargement des documents");
   return data;
@@ -87,4 +63,41 @@ export async function fetchUserPosts(userId) {
 
   if (error) throw error;
   return data;
+}
+
+// src/services/userServices.js
+export async function fetchUserComments(userId) {
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select(
+      `
+      id,
+      content,
+      scores,
+      posted_at,
+      post_id,
+      author_id,
+      posts!inner(
+        title,
+        author_id
+      )
+    `,
+    )
+    .eq("author_id", userId)
+    .order("posted_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user comments:", error);
+    throw new Error("Erreur lors du chargement des commentaires");
+  }
+
+  return comments.map((comment) => ({
+    id: comment.id,
+    content: comment.content,
+    scores: comment.scores || 0,
+    posted_at: comment.posted_at,
+    post_id: comment.post_id,
+    post_title: comment.posts.title,
+    author_id: comment.author_id,
+  }));
 }

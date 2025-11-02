@@ -29,9 +29,9 @@ const DocumentDetail = () => {
             file_url,
             file_type,
             file_size_bytes,
-            created_at,
-            user_id,
-            author:users!inner (email, user_metadata)
+            uploaded_at,
+            author_id,
+            profiles(username)
           `,
           )
           .eq("id", id)
@@ -40,10 +40,7 @@ const DocumentDetail = () => {
         if (error) throw error;
 
         // Format author name
-        const authorName =
-          data.author?.user_metadata?.username ||
-          data.author?.email?.split("@")[0] ||
-          "Anonyme";
+        const authorName = data.profiles?.username || "Anonyme";
 
         const doc = {
           ...data,
@@ -185,7 +182,7 @@ const DocumentDetail = () => {
         </button>
         {isPreviewable && (
           <button
-            onClick={() => window.open(document.file_url, "_blank")}
+            onClick={handleView}
             className="flex items-center justify-center gap-2 bg-[#2b2b2b] hover:bg-[#3a3a3a] text-gray-200 font-medium py-3 px-6 rounded-lg transition-colors"
           >
             <Eye className="w-5 h-5" />
@@ -215,7 +212,7 @@ const DocumentDetail = () => {
                 <div>
                   <p className="text-xs text-gray-500">Publié le</p>
                   <p className="text-white">
-                    {formatDate(document.created_at)}
+                    {formatDate(document.uploaded_at)}
                   </p>
                 </div>
               </div>

@@ -12,7 +12,7 @@ import {
   Lock,
 } from "lucide-react";
 
-const Ask = () => {
+const Post = () => {
   const navigate = useNavigate();
 
   // Auth
@@ -156,10 +156,22 @@ const Ask = () => {
         return;
       }
 
-      const { publicUrlData } = supabase.storage
+      const { data, error: urlError } = await supabase.storage
         .from("post-images")
         .getPublicUrl(fileName);
-      imageUrl = publicUrlData.publicUrl;
+      imageUrl = data.publicUrl;
+
+      if (urlError) {
+        setIsSubmitting(false);
+        alert("Erreur URL : " + urlError.message);
+        return;
+      }
+
+      if (!data.publicUrl) {
+        setIsSubmitting(false);
+        alert("Erreur URL : Impossible de générer l'URL publique");
+        return;
+      }
     }
 
     // Insert post
@@ -304,4 +316,4 @@ const Ask = () => {
   );
 };
 
-export default Ask;
+export default Post;

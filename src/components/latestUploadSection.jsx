@@ -11,7 +11,7 @@ const LatestUploadSection = () => {
   useEffect(() => {
     const getDocuments = async () => {
       try {
-        const docs = await fetchDocuments();
+        const { data: docs } = await fetchDocuments();
         setDocuments(docs);
       } catch (error) {
         console.error("Failed to fetch documents:", error);

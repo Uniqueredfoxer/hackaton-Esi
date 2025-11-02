@@ -15,55 +15,94 @@ const formatFileSize = (sizeInBytes) => {
 };
 
 // src/services/resourceService.js
-export async function fetchDocuments() {
-  const { data, error } = await supabase
-    .from("documents")
-    .select(
-      `
-      id,
-      title,
-      description,
-      category,
-      year,
-      tags,
-      level,
-      file_url,
-      file_type,
-      file_size_bytes,
-      uploaded_at,
-      author_id,
-      profiles!author_id!inner (
-        username
+export async function fetchDocuments(options = {}) {
+  const {
+    query = "",
+    tag = "",
+    year = "",
+    level = "",
+    fileType = "",
+    limit = 10,
+    offset = 0,
+  } = options;
+
+  try {
+    // Start building the query
+    let supabaseQuery = supabase
+      .from("documents")
+      .select(
+        "id, title, description, category, year, tags, level, file_url, file_type, file_size_bytes, uploaded_at, author_id, downloads, profiles!inner(username)",
+        { count: "exact" }, // Get total count for pagination
       )
-    `,
-    )
-    .order("created_at", { ascending: false }) // ✅ Use 'created_at'
-    .limit(10);
+      .order("uploaded_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching documents:", error);
-    return [];
+    // Apply search filter
+    if (query) {
+      supabaseQuery = supabaseQuery.or(
+        `title.ilike.%${query}%,description.ilike.%${query}%`,
+      );
+    }
+
+    // Apply tag filter
+    if (tag) {
+      supabaseQuery = supabaseQuery.contains("tags", [tag]);
+    }
+
+    // Apply year filter
+    if (year) {
+      supabaseQuery = supabaseQuery.eq("year", parseInt(year));
+    }
+
+    // Apply level filter
+    if (level) {
+      supabaseQuery = supabaseQuery.eq("level", level);
+    }
+
+    // Apply file type filter
+    if (fileType) {
+      supabaseQuery = supabaseQuery.eq("file_type", fileType.toLowerCase());
+    }
+
+    // Apply pagination
+    supabaseQuery = supabaseQuery.range(offset, offset + limit - 1);
+
+    // Execute the query
+    const { data: documents, error, count } = await supabaseQuery;
+
+    if (error) {
+      console.error("Error fetching documents:", error);
+      return { data: [], count: 0 };
+    }
+
+    // Format data for UI
+    const formattedDocuments = documents.map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      description: doc.description,
+      category: doc.category,
+      year: doc.year,
+      tags: doc.tags || [],
+      level: doc.level,
+      file_url: doc.file_url,
+      file_type: doc.file_type,
+      file_size: formatFileSize(doc.file_size_bytes),
+      postedAt: doc.uploaded_at,
+      downloads: doc.downloads,
+      author: doc.profiles?.username || "anonymous",
+    }));
+
+    return {
+      data: formattedDocuments,
+      count: count || 0,
+    };
+  } catch (error) {
+    console.error("Unexpected error in fetchDocuments:", error);
+    return { data: [], count: 0 };
   }
-
-  // Format data for UI
-  return data.map((doc) => ({
-    id: doc.id,
-    title: doc.title,
-    description: doc.description,
-    category: doc.category,
-    year: doc.year,
-    tags: doc.tags || [],
-    level: doc.level,
-    file_url: doc.file_url,
-    file_type: doc.file_type,
-    file_size: formatFileSize(doc.file_size_bytes),
-    postedAt: doc.uploaded_at,
-    author: doc.author_id,
-  }));
 }
 
 export async function fetchDocumentById(id) {
-  const { data, error } = await supabase
+  const { data: document, error } = await supabase
     .from("documents")
     .select("*")
     .eq("id", id)
@@ -74,7 +113,7 @@ export async function fetchDocumentById(id) {
     return null;
   }
 
-  return data;
+  return document;
 }
 
 // Update document metadata (title, description, etc.)

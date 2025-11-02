@@ -4,7 +4,10 @@ import supabase from "./supabase";
 // CREATE
 // ======================
 export async function createPost(postData) {
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error: authError,
+  } = await supabase.auth.getSession();
   if (authError || !session?.user) {
     throw new Error("Authentification requise");
   }
@@ -34,100 +37,138 @@ export async function createPost(postData) {
 // ======================
 // READ
 // ======================
-export async function fetchPosts(filters = {}) {
-  const { q = "", tag = "", resolved = "Tout" } = filters;
+export async function fetchPosts(options = {}) {
+  const {
+    search = "",
+    tags = [],
+    author,
+    isResolved,
+    limit = 20,
+    offset = 0,
+    sortBy = "posted_at",
+    sortOrder = "desc",
+  } = options;
 
-  let query = supabase
-    .from("posts")
-    .select(`
-      id,
-      title,
-      description,
-      tags,
-      is_resolved,
-      scores,
-      comments_number,
-      posted_at,
-      image_url,
-      author_id
-    `)
-    .order("posted_at", { ascending: false });
+  try {
+    // Start building the query
+    let query = supabase.from("posts").select(
+      `
+        id,
+        title,
+        description,
+        profiles!posts_author_id_fkey(username),
+        tags,
+        scores,
+        views,
+        comments_number,
+        is_resolved,
+        posted_at,
+        image_url
 
-  // Search in title/description
-  if (q) {
-    const term = `%${q}%`;
-    query = query.or(`title.ilike.${term},description.ilike.${term}`);
+      `,
+      { count: "exact" },
+    ); // Get total count for pagination
+
+    // Apply filters at database level (much more efficient)
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    if (tags.length > 0) {
+      query = query.overlaps("tags", tags);
+    }
+
+    if (author) {
+      query = query.eq("profiles.username", author);
+    }
+
+    if (isResolved !== undefined) {
+      query = query.eq("is_resolved", isResolved);
+    }
+
+    // Apply sorting and pagination
+    query = query
+      .order(sortBy, { ascending: sortOrder === "asc" })
+      .range(offset, offset + limit - 1);
+
+    // Execute the query
+    const { data: posts, error, count } = await query;
+
+    if (error) {
+      console.error("Error fetching posts:", error);
+      throw new Error(`Failed to fetch posts: ${error.message}`);
+    }
+
+    // Transform the data
+    const transformedPosts = posts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      description: post.description,
+      tags: post.tags || [],
+      isResolved: post.is_resolved,
+      score: post.scores || 0,
+      views: post.views || 0,
+      commentsNumber: post.comments_number || 0,
+      date: post.posted_at,
+      imageUrl: post.image_url || null,
+      author: post.profiles?.username,
+    }));
+
+    return {
+      posts: transformedPosts,
+      totalCount: count || 0,
+      hasMore: count ? count > offset + limit : false,
+    };
+  } catch (error) {
+    console.error("Error in fetchPosts:", error);
+    return {
+      posts: [],
+      totalCount: 0,
+      hasMore: false,
+    };
   }
-
-  // Filter by resolved
-  if (resolved === "Résolues") {
-    query = query.eq("is_resolved", true);
-  } else if (resolved === "Non résolues") {sont-elles
-    query = query.eq("is_resolved", false);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    console.error("Fetch posts error:", error);
-    return [];
-  }
-
-  // Client-side tag filter (simple & safe)
-  let result = data;
-  if (tag && tag !== "Tout") {
-    result = data.filter(p => 
-      Array.isArray(p.tags) && p.tags.includes(tag)
-    );
-  }
-
-  return result.map(post => ({
-    id: post.id,
-    title: post.title,
-    description: post.description,
-    tags: post.tags || [],
-    isResolved: post.is_resolved,
-    score: post.scores || 0,
-    commentsNumber: post.comments_number || 0,
-    postedAt: post.posted_at,
-    imageUrl: post.image_url || null,
-    author: { id: post.author_id }
-  }));
 }
 
 export async function fetchPost(postId) {
-  const { data, error } = await supabase
+  const { data: post, error } = await supabase
     .from("posts")
-    .select(`
+    .select(
+      `
       id,
       title,
       description,
+      profiles!posts_author_id_fkey(username),
       tags,
-      is_resolved,
       scores,
+      views,
       comments_number,
+      is_resolved,
       posted_at,
-      image_url,
-      author_id
-    `)
+      image_url
+    `,
+    )
     .eq("id", postId)
     .single();
 
+  console.log("Full post data:", post); // Check what's actually returned
+  console.log("Profiles data:", post.profiles);
   if (error) {
     console.error("Fetch single post error:", error);
     throw new Error("Publication introuvable");
   }
 
   return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    tags: data.tags || [],
-    isResolved: data.is_resolved,
-    score: data.scores || 0,
-    commentsNumber: data.comments_number || 0,
-    postedAt: data.posted_at,
-    imageUrl: data.image_url || null,
-    author: { id: data.author_id }
+    id: post.id,
+    title: post.title,
+    description: post.description,
+    tags: post.tags || [],
+    isResolved: post.is_resolved,
+    score: post.scores || 0,
+    views: post.views || 0,
+    commentsNumber: post.comments_number || 0,
+    date: post.posted_at,
+    imageUrl: post.image_url,
+    author: post.profiles?.username,
   };
 }
 
@@ -135,7 +176,10 @@ export async function fetchPost(postId) {
 // UPDATE
 // ======================
 export async function updatePost(postId, updates) {
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error: authError,
+  } = await supabase.auth.getSession();
   if (authError || !session?.user) {
     throw new Error("Authentification requise");
   }
@@ -160,7 +204,7 @@ export async function updatePost(postId, updates) {
   };
 
   // Remove undefined fields
-  Object.keys(cleanUpdates).forEach(key => {
+  Object.keys(cleanUpdates).forEach((key) => {
     if (cleanUpdates[key] === undefined) delete cleanUpdates[key];
   });
 
@@ -179,7 +223,10 @@ export async function updatePost(postId, updates) {
 // DELETE
 // ======================
 export async function deletePost(postId) {
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error: authError,
+  } = await supabase.auth.getSession();
   if (authError || !session?.user) {
     throw new Error("Authentification requise");
   }
@@ -195,10 +242,7 @@ export async function deletePost(postId) {
     throw new Error("Non autorisé");
   }
 
-  const { error } = await supabase
-    .from("posts")
-    .delete()
-    .eq("id", postId);
+  const { error } = await supabase.from("posts").delete().eq("id", postId);
 
   if (error) {
     console.error("Delete post error:", error);
@@ -206,6 +250,62 @@ export async function deletePost(postId) {
   }
 }
 
+// src/services/postServices.js
+
+// Add this function to your existing postServices
+export async function markPostAsSolved(postId) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    throw new Error("Vous devez être connecté pour marquer comme résolu");
+  }
+
+  const { data: post, error } = await supabase
+    .from("posts")
+    .update({
+      is_solved: true,
+    })
+    .eq("id", postId)
+    .eq("author_id", session.user.id) // Only post author can mark as solved
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error marking post as solved:", error);
+    throw new Error("Erreur lors du marquage comme résolu");
+  }
+
+  return post;
+}
+
+export async function unmarkPostAsSolved(postId) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    throw new Error("Vous devez être connecté pour cette action");
+  }
+
+  const { data: post, error } = await supabase
+    .from("posts")
+    .update({
+      is_resolved: false,
+    })
+    .eq("id", postId)
+    .eq("author_id", session.user.id) // Only post author can unmark
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error unmarking post as solved:", error);
+    throw new Error("Erreur lors du changement de statut");
+  }
+
+  return post;
+}
 
 export default {
   createPost,
@@ -213,4 +313,6 @@ export default {
   fetchPost,
   updatePost,
   deletePost,
+  markPostAsSolved,
+  unmarkPostAsSolved,
 };

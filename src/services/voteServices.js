@@ -1,71 +1,147 @@
 // src/services/voteService.js
-// @ts-nocheck
 import supabase from "./supabase";
 
-// Vote on a post (+1 or -1)
-export async function votePost(postId, voteValue) {
-  if (![-1, 1].includes(voteValue)) {
-    throw new Error("Vote doit être +1 ou -1");
-  }
-
-  const {user:{ session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error("Connectez-vous pour voter");
-
-  const userId = session.user.id;
-
+// Common voting logic
+async function handleVote(tableName, targetId, voteValue, userId) {
   // Check existing vote
-  const {  existingVote } = await supabase
-    .from("post_votes")
-    .select("vote_value")
-    .eq("post_id", postId)
+  const { data: existingVote, error: voteCheckError } = await supabase
+    .from("user_votes")
+    .select("*")
     .eq("user_id", userId)
+    .eq("target_type", tableName.slice(0, -1)) // 'posts' → 'post', 'comments' → 'comment'
+    .eq("target_id", targetId)
     .single();
 
-  if (existingVote) {
-    if (existingVote.vote_value === voteValue) {
-      // Already voted → return current score
-      const {  post } = await supabase.from("posts").select("scores").eq("id", postId).single();
-      return post?.scores || 0;
-    } else {
-      // Change vote
-      await supabase
-        .from("post_votes")
-        .update({ vote_value: voteValue })
-        .eq("post_id", postId)
-        .eq("user_id", userId);
-      
-      const adjustment = voteValue - existingVote.vote_value;
-      const {  post } = await supabase.from("posts").select("scores").eq("id", postId).single();
-      const newScore = (post?.scores || 0) + adjustment;
-      await supabase.from("posts").update({ scores: newScore }).eq("id", postId);
-      return newScore;
-    }
-  } else {
-    // New vote
-    await supabase.from("post_votes").insert({ post_id: postId, user_id: userId, vote_value: voteValue });
-    const {  post } = await supabase.from("posts").select("scores").eq("id", postId).single();
-    const newScore = (post?.scores || 0) + voteValue;
-    await supabase.from("posts").update({ scores: newScore }).eq("id", postId);
-    return newScore;
+  if (voteCheckError && voteCheckError.code !== "PGRST116") {
+    console.error("Error checking existing vote:", voteCheckError);
+    throw new Error("Erreur lors de la vérification du vote");
   }
+
+  let scoreChange = 0;
+  let finalVoteType = null;
+
+  // === CASE 1: No previous vote → INSERT ===
+  if (!existingVote) {
+    const { error } = await supabase.from("user_votes").insert([
+      {
+        user_id: userId,
+        target_type: tableName.slice(0, -1),
+        target_id: targetId,
+        vote_type: voteValue,
+      },
+    ]);
+    if (error) throw error;
+    scoreChange = voteValue;
+    finalVoteType = voteValue;
+  }
+
+  // === CASE 2: Same vote clicked again → DELETE (toggle off) ===
+  else if (existingVote.vote_type === voteValue) {
+    const { error } = await supabase
+      .from("user_votes")
+      .delete()
+      .eq("user_id", userId)
+      .eq("target_type", tableName.slice(0, -1))
+      .eq("target_id", targetId);
+    if (error) throw error;
+    scoreChange = -voteValue;
+    finalVoteType = null;
+  }
+
+  // === CASE 3: Opposite vote → UPDATE ===
+  else {
+    const { error } = await supabase
+      .from("user_votes")
+      .update({ vote_type: voteValue })
+      .eq("user_id", userId)
+      .eq("target_type", tableName.slice(0, -1))
+      .eq("target_id", targetId);
+    if (error) throw error;
+    scoreChange = voteValue * 2; // Remove previous vote and add new one
+    finalVoteType = voteValue;
+  }
+
+  // Update the post/comment score
+  const { data: newScore, error: scoreError } = await supabase.rpc(
+    "update_item_score",
+    {
+      item_id: targetId,
+      table_name: tableName,
+      score_change: scoreChange,
+    },
+  );
+
+  if (scoreError) throw scoreError;
+
+  return {
+    newScore: newScore,
+    userVote: finalVoteType,
+  };
 }
 
-// Get user's current vote on a post (for UI state)
-export async function getUserVote(postId) {
-  const {  user:{ session } } = await supabase.auth.getSession();
-  if (!session?.user) return null;
+// Separate functions for posts and comments
+export async function voteOnPost(postId, voteValue) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  const {  vote } = await supabase
-    .from("post_votes")
-    .select("vote_value")
-    .eq("post_id", postId)
-    .eq("user_id", session.user.id)
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Vous devez être connecté pour voter");
+
+  return await handleVote("posts", postId, voteValue, userId);
+}
+
+export async function voteOnComment(commentId, voteValue) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const userId = session?.user?.id;
+  if (!userId) throw new Error("Vous devez être connecté pour voter");
+
+  return await handleVote("comments", commentId, voteValue, userId);
+}
+
+// Get user's current vote
+export async function getUserVote(targetType, targetId) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const { data: vote } = await supabase
+    .from("user_votes")
+    .select("vote_type")
+    .eq("user_id", userId)
+    .eq("target_type", targetType)
+    .eq("target_id", targetId)
     .single();
 
-  return vote ? vote.vote_value : null;
+  return vote?.vote_type || null;
 }
 
-export default {
-  votePost,
-  getUserVote
-};
+// Get post vote
+export async function getPostUserVote(postId) {
+  return await getUserVote("post", postId);
+}
+
+// Get comment vote
+export async function getCommentUserVote(commentId) {
+  return await getUserVote("comment", commentId);
+}
+
+export async function getCommentsCount(postId) {
+  const { count, error } = await supabase
+    .from("comments")
+    .select("*", { count: "exact", head: true })
+    .eq("post_id", postId);
+
+  if (error) {
+    console.error("Error getting comments count:", error);
+    return 0;
+  }
+
+  return count;
+}
