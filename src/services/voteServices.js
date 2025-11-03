@@ -74,7 +74,7 @@ async function handleVote(tableName, targetId, voteValue, userId) {
   if (scoreError) throw scoreError;
 
   return {
-    newScore: newScore,
+    newScore: newScore || 0,
     userVote: finalVoteType,
   };
 }
@@ -120,6 +120,43 @@ export async function getUserVote(targetType, targetId) {
     .single();
 
   return vote?.vote_type || null;
+}
+
+export async function fetchAllUserVotes(targetType = "post") {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      console.log("No user session found");
+      return {};
+    }
+
+    const { data: votes, error } = await supabase
+      .from("user_votes")
+      .select("target_id, vote_type")
+      .eq("user_id", userId)
+      .eq("target_type", targetType);
+
+    if (error) {
+      console.error("Error fetching user votes:", error);
+      return {};
+    }
+
+    // Convert array to object mapping: { target_id: vote_type }
+    const votesMap = {};
+    votes.forEach((vote) => {
+      votesMap[vote.target_id] = vote.vote_type;
+    });
+
+    console.log(`Fetched ${votes.length} votes for ${targetType}s`);
+    return votesMap;
+  } catch (error) {
+    console.error("Unexpected error in fetchAllUserVotes:", error);
+    return {};
+  }
 }
 
 // Get post vote

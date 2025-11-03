@@ -7,7 +7,11 @@ import {
   createComment,
   deleteComment,
 } from "../services/commentServices";
-import { voteOnPost, voteOnComment } from "../services/voteServices";
+import {
+  voteOnPost,
+  voteOnComment,
+  getPostUserVote,
+} from "../services/voteServices";
 import {
   ArrowLeft,
   Share,
@@ -34,6 +38,21 @@ const PostDetailPage = () => {
   const [commentsError, setCommentsError] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [userVote, setUserVote] = useState(null);
+  const [postScore, setPostScore] = useState(0);
+
+  useEffect(() => {
+    const loadUserVoteForPost = async () => {
+      try {
+        const vote = await getPostUserVote(id);
+        setUserVote(vote);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadUserVoteForPost();
+  }, [id]);
 
   // Fetch post and comments
   useEffect(() => {
@@ -62,6 +81,7 @@ const PostDetailPage = () => {
       setError(null);
       const postData = await fetchPost(id);
       setPost(postData);
+      setPostScore(postData.score || 0);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -83,11 +103,7 @@ const PostDetailPage = () => {
   };
 
   const handleSubmitComment = async (content, parentCommentId = null) => {
-    console.log("Current user:", user); // Debug log
-    console.log("User type:", typeof user); // Debug log
-
     if (!user) {
-      console.log("No user found, redirecting to login"); // Debug log
       navigate("/login");
       return;
     }
@@ -119,20 +135,39 @@ const PostDetailPage = () => {
       setSubmitting(false);
     }
   };
-  const handleVote = async (commentId, voteValue) => {
+  const handlePostVote = async (voteType) => {
     if (!user) {
       navigate("/login");
       return;
     }
 
     try {
-      const newScore = await voteOnComment(commentId, voteValue);
+      const result = await voteOnPost(id, voteType);
+
+      // Update both score and user vote state
+      setPostScore(result.newScore);
+      setUserVote(result.userVote);
+    } catch (err) {
+      console.error("Error voting on post:", err);
+      setError(err.message);
+    }
+  };
+
+  // FIXED: Handle comment voting - expects full result object
+  const handleCommentVote = async (commentId, voteValue) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const result = await voteOnComment(commentId, voteValue);
 
       // Update comment score in state
       const updateCommentScore = (comments, targetId, newScore) => {
         return comments.map((comment) => {
           if (comment.id === targetId) {
-            return { ...comment, scores: newScore };
+            return { ...comment, score: newScore }; // Fixed: should be 'score' not 'scores'
           }
           if (comment.replies) {
             return {
@@ -144,9 +179,11 @@ const PostDetailPage = () => {
         });
       };
 
-      setComments((prev) => updateCommentScore(prev, commentId, newScore));
+      setComments((prev) =>
+        updateCommentScore(prev, commentId, result.newScore),
+      );
     } catch (err) {
-      console.error("Error voting:", err);
+      console.error("Error voting on comment:", err);
       setCommentsError(err.message);
     }
   };
@@ -364,17 +401,39 @@ const PostDetailPage = () => {
           <div className="flex items-center justify-between pt-4 border-t border-[#2b2b2b]">
             <div className="flex items-center gap-4 sm:gap-6 text-sm text-gray-400">
               <div className="flex items-center gap-2 sm:gap-4">
+                {/* Upvote Button */}
                 <button
-                  onClick={() => voteOnPost(post.id, 1)}
-                  className="flex items-center gap-1 hover:text-green-400 transition-colors"
+                  onClick={() => handlePostVote(1)}
+                  className={`flex items-center gap-1 transition-colors ${
+                    userVote === 1
+                      ? "text-green-400"
+                      : "hover:text-green-400 text-gray-400"
+                  }`}
                 >
                   <ThumbsUp className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-xs sm:text-sm">{post.score || 0}</span>
                 </button>
 
+                {/* Score Display */}
+                <span
+                  className={`text-xs sm:text-sm font-medium ${
+                    postScore > 0
+                      ? "text-green-400"
+                      : postScore < 0
+                        ? "text-red-400"
+                        : "text-gray-300"
+                  }`}
+                >
+                  {postScore}
+                </span>
+
+                {/* Downvote Button */}
                 <button
-                  onClick={() => voteOnPost(post.id, -1)}
-                  className="flex items-center gap-1 hover:text-red-400 transition-colors"
+                  onClick={() => handlePostVote(-1)}
+                  className={`flex items-center gap-1 transition-colors ${
+                    userVote === -1
+                      ? "text-red-400"
+                      : "hover:text-red-400 text-gray-400"
+                  }`}
                 >
                   <ThumbsDown className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
@@ -415,10 +474,10 @@ const PostDetailPage = () => {
           <CommentsList
             comments={comments}
             postId={id}
-            onVote={handleVote}
+            onVote={handleCommentVote} // Now uses the fixed handler
             onReply={handleSubmitComment}
             currentUserId={user?.id}
-            isPostAuthor={post.authorId === user?.id}
+            isPostAuthor={post?.authorId === user?.id}
             loading={commentsLoading}
           />
         </section>

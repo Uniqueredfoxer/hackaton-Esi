@@ -8,14 +8,14 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { voteOnPost, getUserVote } from "../services/voteServices";
-import { useState } from "react";
+import { voteOnPost } from "../services/voteServices";
+import { useState, useEffect } from "react";
 
-const QuestionCard = ({ post }) => {
+const QuestionCard = ({ post, userVote: initialUserVote }) => {
   const [isVoting, setIsVoting] = useState(false);
-  const [currentScore, setCurrentScore] = useState(post.scores || 0);
-  const [userVote, setUserVote] = useState(null); // null, 1 (up), or -1 (down)
-  const [optimisticScore, setOptimisticScore] = useState(post.scores || 0);
+  const [currentScore, setCurrentScore] = useState(post.score || 0);
+  const [userVote, setUserVote] = useState(initialUserVote || null); // null, 1 (up), or -1 (down)
+  const [optimisticScore, setOptimisticScore] = useState(post.score || 0);
 
   const {
     id,
@@ -28,6 +28,9 @@ const QuestionCard = ({ post }) => {
     author,
   } = post;
 
+  useEffect(() => {
+    setUserVote(initialUserVote || null);
+  }, [initialUserVote]);
   const authorName = author || "Utilisateur";
 
   const formatDate = (dateString) => {

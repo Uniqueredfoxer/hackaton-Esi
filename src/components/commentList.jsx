@@ -51,7 +51,7 @@ const CommentsList = ({
           postId={postId}
           onVote={onVote}
           onReply={onReply}
-          currentUserId={comment.author_id}
+          currentUserId={currentUserId}
           isPostAuthor={isPostAuthor}
         />
       ))}

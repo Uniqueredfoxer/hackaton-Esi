@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import QuestionCard from "../components/questionCard";
 import { fetchPosts } from "../services/postServices";
 import { Plus, Filter, Search } from "lucide-react";
+import { fetchAllUserVotes } from "../services/voteServices";
 
 const Community = () => {
   // State
@@ -15,6 +16,7 @@ const Community = () => {
   const [resolvedFilter, setResolvedFilter] = useState("Tout");
   const [showFilters, setShowFilters] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [userVotes, setUserVotes] = useState({});
 
   // Options
   const tagOptions = [
@@ -50,6 +52,19 @@ const Community = () => {
   ];
 
   const resolvedOptions = ["Tout", "Résolues", "Non résolues"];
+
+  useEffect(() => {
+    const loadUserVotes = async () => {
+      try {
+        const votes = await fetchAllUserVotes("post");
+        setUserVotes(votes);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadUserVotes();
+  }, []);
 
   // Convert resolved filter to boolean for API
   const getResolvedFilter = () => {
@@ -206,7 +221,11 @@ const Community = () => {
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
-              <QuestionCard key={post.id} post={post} />
+              <QuestionCard
+                key={post.id}
+                post={post}
+                userVote={userVotes[post.id]}
+              />
             ))}
           </div>
         )}
