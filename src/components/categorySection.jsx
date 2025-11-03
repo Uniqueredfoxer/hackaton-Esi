@@ -42,7 +42,7 @@ const CategorySection = () => {
           className="border-box font-bold flex cursor-pointer p-10 bg-yellow-900/40 text-yellow-400 border border-[#bdbdbd25] rounded-[8px] flex-col items-center text-base hover:bg-yellow-800/40 transition-colors duration-400 ease-in-out"
         >
           <BiBook className="h-6 w-6" />
-          <span>Livre</span>
+          <span>Livres</span>
         </li>
       </ul>
     </div>

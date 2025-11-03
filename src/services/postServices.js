@@ -150,8 +150,6 @@ export async function fetchPost(postId) {
     .eq("id", postId)
     .single();
 
-  console.log("Full post data:", post); // Check what's actually returned
-  console.log("Profiles data:", post.profiles);
   if (error) {
     console.error("Fetch single post error:", error);
     throw new Error("Publication introuvable");

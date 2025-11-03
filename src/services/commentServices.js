@@ -207,25 +207,43 @@ export async function createComment(postId, content, parentCommentId = null) {
   if (error) throw new Error("Échec de l'ajout du commentaire");
 
   // ✅ INCREMENT COMMENTS NUMBER IN POSTS TABLE
-  if (!parentCommentId) {
-    // Only increment for top-level comments
-    const { error: updateError } = await supabase
+  try {
+    const { data: post, error: fetchError } = await supabase
       .from("posts")
-      .update({
-        comments_number: supabase.raw("comments_number + 1"),
-      })
-      .eq("id", postId);
+      .select("comments_number, author_id")
+      .eq("id", postId)
+      .single();
 
-    if (updateError) {
-      console.error("Failed to update comments count:", updateError);
+    if (!fetchError && post) {
+      const newCount = (post.comments_number || 0) + 1;
+
+      // Update comment count
+      await supabase
+        .from("posts")
+        .update({ comments_number: newCount })
+        .eq("id", postId);
+
+      // ✅ UPDATE POST AUTHOR'S CONTRIBUTION POINTS
+      if (post.author_id) {
+        const { data: authorProfile, error: authorFetchError } = await supabase
+          .from("profiles")
+          .select("scores")
+          .eq("id", post.author_id)
+          .single();
+
+        if (!authorFetchError && authorProfile) {
+          const newPoints = (authorProfile.contribution_points || 0) + 1;
+
+          await supabase
+            .from("profiles")
+            .update({ contribution_points: newPoints })
+            .eq("id", post.author_id);
+        }
+      }
     }
+  } catch (err) {
+    console.log("⚠️ Couldn't update counts:", err);
   }
-
-  // Update user's contribution score for making a comment
-  await supabase.rpc("increment_user_contribution", {
-    user_id: session.user.id,
-    points: 1,
-  });
 
   return {
     id: data.id,
