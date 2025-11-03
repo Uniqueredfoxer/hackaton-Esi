@@ -8,8 +8,7 @@ export const signUp = async (username, email, password) => {
       data: {
         username,
       },
-      emailRedirectTo:
-        "https://unbewildering-tish-nonlubricious.ngrok-free.dev/confirm-email",
+      emailRedirectTo: "https://hackaton-esi.vercel.app/confirm-email",
     },
   });
 
