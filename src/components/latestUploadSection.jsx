@@ -35,7 +35,7 @@ const LatestUploadSection = () => {
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
         </Link>
       </div>
-      {/* Document Grid */}z
+      {/* Document Grid */}
       <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         {documents.slice(0, 4).map((doc) => (
           <DocumentCard key={doc.id} document={doc} />
