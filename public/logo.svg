@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mortarboard (diamond rotated) -->
+  <g transform="translate(32,12)">
+    <polygon points="0,-8 12,0 0,8 -12,0" transform="rotate(0)" fill="#ddd" />
+    <!-- little band -->
+    <rect x="-10" y="9" width="20" height="4" rx="1" fill="#ddd" />
+  </g>
+
+  <!-- Open book / cube below -->
+  <g transform="translate(8,26)">
+    <!-- left page face -->
+    <path d="M0 4 L20 0 L20 24 L0 20 Z" fill="#ddd" />
+    <!-- right page face -->
+    <path d="M44 4 L24 0 L24 24 L44 20 Z" fill="#ddd" />
+    <!-- center spine (a gap) -->
+    <rect x="20" y="2" width="4" height="20" fill="#aaa" />
+    <!-- open page highlights (cutouts) -->
+    <path d="M6 8 L22 6 L22 18 L6 20 Z" fill="#000" opacity="0.06" />
+    <path d="M38 8 L22 6 L22 18 L38 20 Z" fill="#000" opacity="0.06" />
+  </g>
+</svg>
