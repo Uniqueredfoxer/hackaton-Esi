@@ -59,43 +59,8 @@ export async function fetchComments(postId, options = {}) {
   }
 
   // If requested, fetch replies for each comment
-  let commentsWithReplies = comments;
-  if (includeReplies && comments.length > 0) {
-    const commentIds = comments.map((c) => c.id);
-    const { data: replies } = await supabase
-      .from("comments")
-      .select(
-        `
-        id,
-        content,
-        scores,
-        posted_at,
-        profiles!inner(
-          username
-        )
-      `,
-      )
-      .in("parent_comment_id", commentIds)
-      .order("posted_at", { ascending: true });
-
-    // Group replies by parent comment
-    const repliesByParent = {};
-    replies?.forEach((reply) => {
-      if (!repliesByParent[reply.parent_comment_id]) {
-        repliesByParent[reply.parent_comment_id] = [];
-      }
-      repliesByParent[reply.parent_comment_id].push(reply);
-    });
-
-    // Add replies to comments
-    commentsWithReplies = comments.map((comment) => ({
-      ...comment,
-      replies: repliesByParent[comment.id] || [],
-    }));
-  }
-
   return {
-    comments: commentsWithReplies.map((comment) => ({
+    comments: comments.map((comment) => ({
       id: comment.id,
       postId: comment.post_id,
       parentComment: comment.parent_comment_id,
@@ -216,7 +181,7 @@ export async function fetchCommentReplies(commentId) {
       id: reply.id,
       content: reply.content || "",
       score: reply.scores || 0,
-      postedAt: reply.posted_at,
+      date: reply.posted_at,
       author_id: reply.author_id,
       author: reply.profiles?.username || "Utilisateur inconnu",
     }));

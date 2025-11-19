@@ -123,7 +123,7 @@ const Comment = ({
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "—";
+    if (!dateString) return "-";
 
     const date = new Date(dateString);
     const now = new Date();
@@ -149,13 +149,6 @@ const Comment = ({
     }
   };
 
-  console.log('🔍 Comment Debug:', {
-    showRepliesList,
-    replyCount,
-    hasFetchedReplies,
-    loadingReplies,
-    replies
-  });
   
   return (
     <div>
@@ -171,7 +164,7 @@ const Comment = ({
             </span>
           </div>
           <span className="text-xs text-gray-400 pr-4">
-            {formatDate(comment.postedAt)}
+            {formatDate(comment.date)}
           </span>
         </div>
 
