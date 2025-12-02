@@ -1,4 +1,3 @@
-// src/components/QuestionCard.jsx
 import { Link } from "react-router-dom";
 import {
   MessageCircle,

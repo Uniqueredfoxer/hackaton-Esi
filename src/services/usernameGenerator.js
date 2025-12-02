@@ -1,6 +1,5 @@
 import supabase from "./supabase";
 
-// Listes d'adjectifs et noms français originaux (façon Reddit, un peu bizarres)
 const adjectives = [
   "Hivernal",
   "Gélatineux",
@@ -72,7 +71,6 @@ const nouns = [
   "Octopus",
 ];
 
-// Vérifie si le pseudo existe déjà dans la table "profiles"
 const isUsernameAvailable = async (username) => {
   if (!username || username.trim().length < 3) {
     return false; // Invalid username
@@ -92,17 +90,14 @@ const isUsernameAvailable = async (username) => {
     return false; // On error, assume username is taken (safer)
   }
 };
-// ----------------------------------------------------------------------
-// Trouve un pseudo DISPONIBLE dans la base de données Supabase
-// ----------------------------------------------------------------------
+
 export const generateUsername = async () => {
   let username = "";
   let isAvailable = false;
   let attempts = 0;
-  const maxAttempts = 10; // Empêche les boucles infinies
+  const maxAttempts = 10;
 
   while (!isAvailable && attempts < maxAttempts) {
-    // 1. GÉNÉRER le pseudo (en minuscules et avec underscore)
     const adj =
       adjectives[Math.floor(Math.random() * adjectives.length)].toLowerCase();
     const noun = nouns[Math.floor(Math.random() * nouns.length)].toLowerCase();
@@ -110,7 +105,6 @@ export const generateUsername = async () => {
 
     username = `${noun}_${adj}${number}`;
 
-    // 2. VÉRIFIER DISPONIBILITÉ dans Supabase
     isAvailable = await isUsernameAvailable(username);
     attempts++;
   }

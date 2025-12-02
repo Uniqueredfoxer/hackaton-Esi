@@ -1,4 +1,3 @@
-// src/pages/DocumentDetail.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Download, FileText, Eye, Tag, Calendar, User } from "lucide-react";

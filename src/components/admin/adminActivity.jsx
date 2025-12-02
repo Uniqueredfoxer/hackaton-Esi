@@ -1,4 +1,4 @@
-// src/components/admin/AdminActivity.jsx
+
 import { MessageCircle, FileText, User, Clock } from "lucide-react";
 
 const AdminActivity = ({ activities, showAll = false }) => {

@@ -97,9 +97,7 @@ const Upload = () => {
     );
   }
 
-  // ✅ User is logged in → show upload form
 
-  // Options (moved inside component for clarity)
   const categoryOptions = ["Cours", "TD", "Devoir", "Livre"];
   const levelOptions = [
     "Licence",
@@ -152,7 +150,6 @@ const Upload = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Better validation
     if (
       !file ||
       !title.trim() ||
@@ -178,18 +175,15 @@ const Upload = () => {
         level,
       };
 
-      // ✅ Safe call with error handling
+     
       const result = await uploadFile(file, metadata);
 
       if (result.error) {
-        // Handle service-level error
         alert("Erreur : " + result.error);
       } else if (result.success) {
-        // Handle success
         alert("Fichier téléversé avec succès !");
         navigate("/resources");
       } else {
-        // Fallback for unexpected response
         alert("Réponse inattendue du serveur");
       }
     } catch (err) {

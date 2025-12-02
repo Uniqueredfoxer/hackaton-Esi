@@ -1,4 +1,4 @@
-// src/components/Comment/Comment.jsx
+
 import { useState, useEffect } from "react";
 import { MoreVertical, User, Edit3, Trash2, MessageSquare, Reply } from "lucide-react";
 import CommentActions from "./commentActions";

@@ -14,7 +14,6 @@ export async function fetchUserProfile(userId) {
   return data;
 }
 
-//fetch user documents
 export async function fetchUserDocuments(userId) {
   const { data, error } = await supabase
     .from("documents")
@@ -65,7 +64,6 @@ export async function fetchUserPosts(userId) {
   return data;
 }
 
-// src/services/userServices.js
 export async function fetchUserComments(userId) {
   const { data: comments, error } = await supabase
     .from("comments")

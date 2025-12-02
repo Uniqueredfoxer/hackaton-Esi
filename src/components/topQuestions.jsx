@@ -1,4 +1,3 @@
-// src/components/TopQuestions.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { fetchPosts } from "../services/postServices";

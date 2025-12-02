@@ -1,12 +1,9 @@
-// src/services/commentService.js
-// @ts-nocheck
+
 import supabase from "./supabase";
 
 // Create a comment
-// Comments service optimized for your schema
 export const COMMENTS_PAGE_SIZE = 20;
 
-// Fetch comments with pagination and sorting
 export async function fetchComments(postId, options = {}) {
   const {
     page = 1,
@@ -112,12 +109,12 @@ export async function fetchCommentCount(postId) {
     throw error;
   }
 }
-// Fetch comment replies separately
+
 export async function fetchCommentReplies(commentId) {
   // EXTENSIVE DEBUGGING
-  console.log('🔍 [fetchCommentReplies] Called with commentId:', commentId);
-  console.log('🔍 [fetchCommentReplies] commentId type:', typeof commentId);
-  console.log('🔍 [fetchCommentReplies] commentId stringified:', JSON.stringify(commentId));
+  // console.log('🔍 [fetchCommentReplies] Called with commentId:', commentId);
+  // console.log('🔍 [fetchCommentReplies] commentId type:', typeof commentId);
+  // console.log('🔍 [fetchCommentReplies] commentId stringified:', JSON.stringify(commentId));
   
   // Enhanced input validation
   if (!commentId) {
@@ -168,7 +165,7 @@ export async function fetchCommentReplies(commentId) {
       throw new Error("Impossible de charger les réponses");
     }
 
-    // Handle empty results gracefully
+  
     if (!replies || replies.length === 0) {
       console.log('✅ [fetchCommentReplies] No replies found');
       return [];
@@ -176,7 +173,6 @@ export async function fetchCommentReplies(commentId) {
 
     console.log('✅ [fetchCommentReplies] Success! Found', replies.length, 'replies');
     
-    // Transform data with fallbacks
     return replies.map((reply) => ({
       id: reply.id,
       content: reply.content || "",
@@ -196,7 +192,6 @@ export async function fetchCommentReplyCount(commentId) {
   console.log('🔍 [fetchCommentReplyCount] Starting with commentId:', commentId);
   console.log('🔍 [fetchCommentReplyCount] commentId type:', typeof commentId);
   
-  // Input validation
   if (!commentId) {
     console.warn("❌ [fetchCommentReplyCount] commentId is required or falsy:", commentId);
     return 0;

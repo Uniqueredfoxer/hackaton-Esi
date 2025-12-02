@@ -19,8 +19,6 @@ const ForgotPasswordForm = () => {
         
         // Supabase sends the reset email
         const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-            // CRITICAL: Replace this with your actual production URL
-            // This is the page where the user lands to type their new password
             redirectTo: `${window.location.origin}/update-password`, 
         });
 
@@ -30,8 +28,6 @@ const ForgotPasswordForm = () => {
             // Display an error, like 'Too many requests' or another Supabase error
             setMessage(`Erreur: ${error.message}`);
         } else {
-            // SECURITY/UX: Always give a success message, even if the email doesn't exist,
-            // to prevent email enumeration.
             setMessage('');
             setIsSent(true); 
         }
@@ -40,7 +36,6 @@ const ForgotPasswordForm = () => {
     // --- Conditional Success View ---
     if (isSent) {
         return (
-            // Thème: Fond très sombre, bordure verte pour le succès
             <div className="flex flex-col items-center max-w-md mt-20 p-8 mx-4 rounded-lg bg-black border border-green-600 shadow-2xl text-center md:mx-auto">
                 <Mail className="w-12 h-12 text-green-400 mb-4" />
                 <h2 className="text-2xl font-bold text-gray-100 mb-2">E-mail envoyé!</h2>
@@ -50,7 +45,6 @@ const ForgotPasswordForm = () => {
                 <p className="text-gray-400 text-sm">
                     Veuillez vérifier votre boîte de réception (et vos spams).
                 </p>
-                {/* Lien de retour au thème sombre */}
                 <a href="/login" className="mt-6 flex items-center gap-2 text-gray-300 hover:text-white font-semibold transition">
                     <ArrowLeft className="w-4 h-4" /> Retour à la connexion
                 </a>

@@ -14,7 +14,6 @@ const formatFileSize = (sizeInBytes) => {
   }
 };
 
-// src/services/resourceService.js
 export async function fetchDocuments(options = {}) {
   const {
     query = "",
@@ -27,7 +26,6 @@ export async function fetchDocuments(options = {}) {
   } = options;
 
   try {
-    // Start building the query
     let supabaseQuery = supabase
       .from("documents")
       .select(
@@ -36,29 +34,24 @@ export async function fetchDocuments(options = {}) {
       )
       .order("uploaded_at", { ascending: false });
 
-    // Apply search filter
     if (query) {
       supabaseQuery = supabaseQuery.or(
         `title.ilike.%${query}%,description.ilike.%${query}%`,
       );
     }
 
-    // Apply tag filter
     if (tag) {
       supabaseQuery = supabaseQuery.contains("tags", [tag]);
     }
 
-    // Apply year filter
     if (year) {
       supabaseQuery = supabaseQuery.eq("year", parseInt(year));
     }
 
-    // Apply level filter
     if (level) {
       supabaseQuery = supabaseQuery.eq("level", level);
     }
 
-    // Apply file type filter
     if (fileType) {
       supabaseQuery = supabaseQuery.eq("file_type", fileType.toLowerCase());
     }
@@ -116,7 +109,6 @@ export async function fetchDocumentById(id) {
   return document;
 }
 
-// Update document metadata (title, description, etc.)
 export async function updateDocument(documentId, updates) {
   const {
     user: { session },
@@ -155,7 +147,6 @@ export async function updateDocument(documentId, updates) {
   if (error) throw new Error("Échec de la mise à jour");
 }
 
-// Delete document (file + metadata)
 export async function deleteDocument(documentId) {
   const {
     user: { session },

@@ -79,7 +79,6 @@ export async function uploadFile(file, metadata) {
       return { error: "Impossible de générer l'URL publique du fichier." };
     }
 
-    // ✅ 5. Insert into DATABASE TABLE (not bucket!)
     const documentMetadata = {
       author_id: user.id,
       title: metadata.title.trim(),
@@ -94,15 +93,13 @@ export async function uploadFile(file, metadata) {
       thumbnail_url: THUMBNAIL_FALLBACKS[file.type] || null,
     };
 
-    // ⚠️ IMPORTANT: Table name must be 'documents' (or whatever you created in DB)
     const { error: dbError } = await supabase
-      .from("documents") // ← this is your POSTGRES TABLE name
+      .from("documents")
       .insert(documentMetadata);
 
     if (dbError) {
       console.error("DB insert failed:", dbError);
 
-      // Attempt cleanup
       try {
         const { error: deleteError } = await supabase.storage
           .from(BUCKET_NAME)

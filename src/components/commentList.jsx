@@ -1,4 +1,3 @@
-// src/components/Comment/CommentsList.jsx
 import Comment from "./commentCard";
 import { MessageCircle } from "lucide-react";
 

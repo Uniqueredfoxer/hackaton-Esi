@@ -1,4 +1,3 @@
-// src/components/admin/AdminStats.jsx
 import { Users, FileText, MessageCircle, TrendingUp } from "lucide-react";
 
 const AdminStats = ({ stats }) => {

@@ -1,7 +1,5 @@
-// src/services/voteService.js
 import supabase from "./supabase";
 
-// Common voting logic
 async function handleVote(tableName, targetId, voteValue, userId) {
   // Check existing vote
   const { data: existingVote, error: voteCheckError } = await supabase
@@ -20,7 +18,7 @@ async function handleVote(tableName, targetId, voteValue, userId) {
   let scoreChange = 0;
   let finalVoteType = null;
 
-  // === CASE 1: No previous vote → INSERT ===
+  // CASE 1: No previous vote → INSERT
   if (!existingVote) {
     const { error } = await supabase.from("user_votes").insert([
       {
@@ -35,7 +33,7 @@ async function handleVote(tableName, targetId, voteValue, userId) {
     finalVoteType = voteValue;
   }
 
-  // === CASE 2: Same vote clicked again → DELETE (toggle off) ===
+  // CASE 2: Same vote clicked again → DELETE (toggle off)
   else if (existingVote.vote_type === voteValue) {
     const { error } = await supabase
       .from("user_votes")
@@ -48,7 +46,7 @@ async function handleVote(tableName, targetId, voteValue, userId) {
     finalVoteType = null;
   }
 
-  // === CASE 3: Opposite vote → UPDATE ===
+  // CASE 3: Opposite vote → UPDATE
   else {
     const { error } = await supabase
       .from("user_votes")
@@ -79,7 +77,6 @@ async function handleVote(tableName, targetId, voteValue, userId) {
   };
 }
 
-// Separate functions for posts and comments
 export async function voteOnPost(postId, voteValue) {
   const {
     data: { session },
@@ -102,7 +99,6 @@ export async function voteOnComment(commentId, voteValue) {
   return await handleVote("comments", commentId, voteValue, userId);
 }
 
-// Get user's current vote
 export async function getUserVote(targetType, targetId) {
   const {
     data: { session },
@@ -145,7 +141,6 @@ export async function fetchAllUserVotes(targetType = "post") {
       return {};
     }
 
-    // Convert array to object mapping: { target_id: vote_type }
     const votesMap = {};
     votes.forEach((vote) => {
       votesMap[vote.target_id] = vote.vote_type;
@@ -159,12 +154,10 @@ export async function fetchAllUserVotes(targetType = "post") {
   }
 }
 
-// Get post vote
 export async function getPostUserVote(postId) {
   return await getUserVote("post", postId);
 }
 
-// Get comment vote
 export async function getCommentUserVote(commentId) {
   return await getUserVote("comment", commentId);
 }

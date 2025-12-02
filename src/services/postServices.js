@@ -60,8 +60,6 @@ export async function fetchPosts(options = {}) {
         profiles!posts_author_id_fkey(username),
         tags,
         scores,
-        views,
-        is_resolved,
         posted_at,
         image_url
 
@@ -105,9 +103,7 @@ export async function fetchPosts(options = {}) {
       title: post.title,
       description: post.description,
       tags: post.tags || [],
-      isResolved: post.is_resolved,
       score: post.scores || 0,
-      views: post.views || 0,
       date: post.posted_at,
       imageUrl: post.image_url || null,
       author: post.profiles?.username,
@@ -249,9 +245,7 @@ export async function deletePost(postId) {
   return { success: true };
 }
 
-// src/services/postServices.js
 
-// Add this function to your existing postServices
 export async function markPostAsSolved(postId) {
   const {
     data: { session },

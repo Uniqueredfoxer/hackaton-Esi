@@ -1,4 +1,3 @@
-// src/services/adminService.js
 import supabase from "./supabase";
 
 // Check if user is admin
@@ -61,7 +60,7 @@ export async function getDashboardStats() {
 // Get reported content
 export async function getReportedContent() {
   const { data: reports, error } = await supabase
-    .from("reports") // You'll need to create this table
+    .from("reports") // I'll need to create this table. This feature is not implemented yet..
     .select(
       `
       id,

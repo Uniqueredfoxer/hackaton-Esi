@@ -1,4 +1,4 @@
-// src/pages/Community.jsx
+
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import QuestionCard from "../components/questionCard";
@@ -7,7 +7,7 @@ import { Plus, Filter, Search } from "lucide-react";
 import { fetchAllUserVotes } from "../services/voteServices";
 
 const Community = () => {
-  // State
+  // States
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -18,10 +18,10 @@ const Community = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [userVotes, setUserVotes] = useState({});
 
-  // Options
+  // Tags....In English on purpose HAHA...
   const tagOptions = [
-    "Tout",
-    "ADS",
+    "Tout",//for database level filtering
+    "ADS",//algorithm and Data Structure
     "Maths",
     "Linear Algebra",
     "General Algebra",
@@ -35,9 +35,9 @@ const Community = () => {
     "English",
     "Economics",
     "Accounting",
-    "OS",
+    "OS",//operating systems
     "Networks",
-    "DB",
+    "DB",//databases
     "Programmation",
     "Web",
     "Mobile",
@@ -51,7 +51,7 @@ const Community = () => {
     "Rust",
   ];
 
-  const resolvedOptions = ["Tout", "Résolues", "Non résolues"];
+  const resolvedOptions = ["Tout", "Résolues", "Non résolues"];//non implementé, faute de temps
 
   useEffect(() => {
     const loadUserVotes = async () => {

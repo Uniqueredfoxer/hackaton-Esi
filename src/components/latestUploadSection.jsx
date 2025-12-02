@@ -1,4 +1,3 @@
-// src/components/LatestUploadSection.jsx
 import DocumentCard from "./documentCard";
 import { useState, useEffect } from "react";
 import { fetchDocuments } from "../services/documentServices";

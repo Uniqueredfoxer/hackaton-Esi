@@ -1,7 +1,7 @@
 import {Link} from "react-router-dom";
 
 
-const CallToAction = ({text, link, buttonText}) => {
+const CallToAction = () => {
     return (
         <div className="flex flex-col items-center gap-4  border-[#bdbdbd25] py-20 mt-20 w-full  md:px-20 lg:rounded-[8px]">
             <h1 className="text-gray-300 font-black text-2xl text-center md:text-4xl">Pret a contribuer?</h1>

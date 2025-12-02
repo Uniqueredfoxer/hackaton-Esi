@@ -1,4 +1,4 @@
-// src/components/admin/AdminReports.jsx
+
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle, XCircle, Eye, Trash2 } from "lucide-react";
 import {

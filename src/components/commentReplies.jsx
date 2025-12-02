@@ -1,4 +1,3 @@
-// src/components/Comment/CommentReplies.jsx
 import Comment from "./commentCard";
 
 const CommentReplies = ({

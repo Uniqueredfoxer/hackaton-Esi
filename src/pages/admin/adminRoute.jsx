@@ -1,4 +1,3 @@
-// src/components/AdminRoute.jsx
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { isUserAdmin } from "../../services/adminServices";

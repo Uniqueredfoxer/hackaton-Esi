@@ -1,4 +1,3 @@
-// src/components/Comment/CommentForm.jsx
 import { useState } from "react";
 import { Send, X } from "lucide-react";
 

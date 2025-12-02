@@ -1,4 +1,3 @@
-// src/pages/PostDetailPage.jsx
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -160,7 +159,7 @@ const PostDetailPage = () => {
     }
   };
 
-  // FIXED: Handle comment voting - expects full result object
+  
   const handleCommentVote = async (commentId, voteValue) => {
     if (!user) {
       navigate("/login");
@@ -204,7 +203,6 @@ const PostDetailPage = () => {
     const diffInHours = diffInMs / (1000 * 60 * 60);
     const diffInDays = diffInHours / 24;
 
-    // Mobile-friendly relative formatting
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
       return diffInMinutes < 1 ? "À l'instant" : `Il y a ${diffInMinutes}min`;
@@ -213,7 +211,6 @@ const PostDetailPage = () => {
     } else if (diffInDays < 7) {
       return `Il y a ${Math.floor(diffInDays)}j`;
     } else {
-      // For older dates, use absolute format
       const options =
         window.innerWidth < 768
           ? { day: "numeric", month: "short" } // Mobile: "25 oct."

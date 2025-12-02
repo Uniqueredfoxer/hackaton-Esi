@@ -58,7 +58,7 @@ const Signup = () => {
     }
   };
 
-  // 🎯 NEW FUNCTION: Debounced check for manual input
+  // 🎯 NEW FUNCTION: check for manual input
   const handleUsernameChange = (newUsername) => {
     setUsername(newUsername);
     setUsernameStatus(null); // Reset status when typing starts
