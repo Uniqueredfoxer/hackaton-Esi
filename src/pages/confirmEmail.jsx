@@ -10,8 +10,8 @@ const ConfirmEmail = () => {
 
   useEffect(() => {
     const verifyEmail = async () => {
-      const token_hash = searchParams.get("token");
-      const type = searchParams.get("type");
+      const token_hash = searchParams.get("token") || 'temp_hash';
+      const type = searchParams.get("type") || 'temp_type';
       const next = searchParams.get("redirect_to") || "/";
 
       if (!token_hash || !type) {
