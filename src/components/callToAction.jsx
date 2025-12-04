@@ -8,7 +8,7 @@ const CallToAction = () => {
             <p className="text-sm text-center text-gray-500 md:text-base">Si vous avez des ressources à partager ou des questions, n'hésitez pas à nous le faire savoir!</p>
             <div className="flex flex-col gap-3 md:flex-row md:gap-4">
                 <Link to="/upload" className=" text-center inline-block bg-green-700/25 hover:bg-green-700/50 transition-colors duration-300 ease-in-out font-semibold py-2 px-4 rounded-md text-green-400 ">televerser</Link>
-                <Link to="/ask" className="inline-block bg-blue-700/25 hover:bg-blue-700/50 transition-colors duration-300 ease-in-out font-semibold py-2 px-4 rounded-md text-blue-400">poser une question</Link>
+                <Link to="/post" className="inline-block bg-blue-700/25 hover:bg-blue-700/50 transition-colors duration-300 ease-in-out font-semibold py-2 px-4 rounded-md text-blue-400">poser une question</Link>
             </div>
         </div>
     );
