@@ -217,7 +217,7 @@ const Signup = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-[#111] border border-[#2b2b2b] px-3 py-2 rounded-md text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#444]"
-              placeholder="you@university.edu"
+              placeholder="yourname@example.com"
               autoComplete="email"
               required
             />
